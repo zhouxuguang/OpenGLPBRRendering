@@ -55,7 +55,14 @@ if(APPLE)
     target_link_libraries(OpenGLPBRRendering PRIVATE "-framework CoreGraphics" "-framework CoreVideo" "-framework QuartzCore" 
         "-framework GameController" "-framework Metal" "-framework ImageIO" "-framework OpenGL" "-framework AppKit")
     target_compile_options(OpenGLPBRRendering PRIVATE "-fobjc-arc")
-    #set_target_properties(OpenGLPBRRendering PROPERTIES LINK_FLAGS "-fno-objc-arc")
+    add_definitions(-DGL_SILENCE_DEPRECATION)
     set_source_files_properties(Framework/main_mac.mm PROPERTIES COMPILE_FLAGS "-fno-objc-arc")
 endif()
+
+# 复制资源
+add_custom_command(TARGET OpenGLPBRRendering POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/Framework/Res"
+        "$<TARGET_FILE_DIR:OpenGLPBRRendering>/Res"
+)
 

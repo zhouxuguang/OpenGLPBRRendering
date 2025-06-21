@@ -52,7 +52,6 @@ GLuint CompileShader(GLenum shaderType, const char*shaderCode);
 GLuint CreateProgram(GLuint vsShader, GLuint fsShader);
 GLuint CreateProgramFromFile(const char* inVertexShaderPath, const char* inFragmentShaderPath);
 float GetFrameTime();
-unsigned char * DecodeBMP(unsigned char*bmpFileData, int&width, int&height);
 void* DecodeImageFile(const char* path, int& width, int& height, int& channelCount);
 GLuint CreateTexture2D(void*pixelData, int width, int height,GLenum gpu_format=GL_RGB,GLenum cpu_format=GL_RGB, 
 	GLenum wrapMode=GL_CLAMP_TO_EDGE, GLenum minFilter=GL_LINEAR, GLenum magFilter = GL_LINEAR);

@@ -4,23 +4,6 @@
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/OpenGL.h>
 #import <OpenGL/gl3.h>
-#import <mach/mach_time.h>
-
-// 高精度帧时间计算 (Mac实现)
-float GetFrameTime() {
-    static uint64_t lastTime = 0;
-    static mach_timebase_info_data_t timebase;
-    
-    if (timebase.denom == 0) {
-        mach_timebase_info(&timebase);
-    }
-    
-    uint64_t currentTime = mach_absolute_time();
-    uint64_t elapsedNano = (currentTime - lastTime) * timebase.numer / timebase.denom;
-    
-    lastTime = currentTime;
-    return static_cast<float>(elapsedNano) / 1e9f;
-}
 
 // macOS OpenGL视图类
 @interface MacGLView : NSOpenGLView {
@@ -60,14 +43,17 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink,
     @autoreleasepool {
         MacGLView* view = (__bridge MacGLView*)displayLinkContext;
         
-        // 确保上下文正确绑定
-        [[view openGLContext] makeCurrentContext];
-        
-        // 渲染帧
-        Draw();
-        
-        // 交换缓冲区
-        [[view openGLContext] flushBuffer];
+        dispatch_async(dispatch_get_main_queue(), ^
+        {
+            [[view openGLContext] makeCurrentContext];
+            
+            // 渲染帧
+            Draw();
+            
+            // 交换缓冲区
+            [[view openGLContext] flushBuffer];
+        }
+        );
     }
     return kCVReturnSuccess;
 }

@@ -3,10 +3,38 @@ extern"C" {
 #include "stbi/stb_image.h"
 }
 
-#ifdef __WIN32
+#ifdef _WIN32
 #pragma warning(disable : 4996)
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"glew32.lib")
+#pragma comment(lib,"winmm.lib")
+#pragma warning(disable : 4996)
+
+float GetFrameTime() {
+	static unsigned long lastTime = 0, timeSinceComputerStart = 0;
+	timeSinceComputerStart = timeGetTime();
+	unsigned long frameTime = lastTime == 0 ? 0 : timeSinceComputerStart - lastTime;
+	lastTime = timeSinceComputerStart;
+	return float(frameTime) / 1000.0f;
+}
+
+#elif __APPLE__
+#include <mach/mach_time.h>
+// 高精度帧时间计算 (Mac实现)
+float GetFrameTime() {
+    static uint64_t lastTime = 0;
+    static mach_timebase_info_data_t timebase;
+    
+    if (timebase.denom == 0) {
+        mach_timebase_info(&timebase);
+    }
+    
+    uint64_t currentTime = mach_absolute_time();
+    uint64_t elapsedNano = (currentTime - lastTime) * timebase.numer / timebase.denom;
+    
+    lastTime = currentTime;
+    return static_cast<float>(elapsedNano) / 1e9f;
+}
 #endif
 
 unsigned char * LoadFileContent(const char *path, int &filesize) {

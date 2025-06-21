@@ -1,16 +1,9 @@
 #include "ggl.h"
 #include "scene.h"
 #include "wglew.h"
-#pragma comment(lib,"winmm.lib")
+
 #pragma warning(disable : 4996)
 
-float GetFrameTime() {
-	static unsigned long lastTime = 0, timeSinceComputerStart = 0;
-	timeSinceComputerStart = timeGetTime();
-	unsigned long frameTime = lastTime == 0 ? 0 : timeSinceComputerStart - lastTime;
-	lastTime = timeSinceComputerStart;
-	return float(frameTime) / 1000.0f;
-}
 HGLRC CreateNBRC(HDC dc)
 {
 	HGLRC rc=nullptr;
