@@ -28,28 +28,34 @@ set(PROJECT_SOURCES
         Framework/StaticMesh.h
         Framework/utils.h
         Framework/utils.cpp
-        Framework/utils.h
+        Framework/scene.h
+        Framework/scene.cpp
         Framework/glad/src/glad.c
         Framework/glad/include/glad/glad.h
         Framework/stbi/stb_image.cpp
         Framework/stbi/stb_image.h
 )
 
-# set(PLATFORM_SRC )
-# if(APPLE)
-# endif()
-
-# if(WIN32)
-# endif()
-
 add_library(PBRFramework SHARED ${PROJECT_SOURCES})
 
 target_include_directories(PBRFramework PUBLIC Framework/glad/include)
 
+set(PLATFORM_SRC )
 if(APPLE)
-    target_link_libraries(PBRFramework PRIVATE "-framework CoreGraphics" "-framework CoreVideo" "-framework QuartzCore" 
+set(PLATFORM_SRC Framework/main_mac.mm)
+endif()
+
+if(WIN32)
+set(PLATFORM_SRC Framework/main_win32.cpp)
+endif()
+add_executable(OpenGLPBRRendering ${PLATFORM_SRC})
+target_link_libraries(OpenGLPBRRendering PRIVATE PBRFramework)
+
+if(APPLE)
+    target_link_libraries(OpenGLPBRRendering PRIVATE "-framework CoreGraphics" "-framework CoreVideo" "-framework QuartzCore" 
         "-framework GameController" "-framework Metal" "-framework ImageIO" "-framework OpenGL" "-framework AppKit")
-    target_compile_options(PBRFramework PRIVATE "-fobjc-arc")
-    set_target_properties(PBRFramework PROPERTIES LINK_FLAGS "-fobjc-arc")
+    target_compile_options(OpenGLPBRRendering PRIVATE "-fobjc-arc")
+    #set_target_properties(OpenGLPBRRendering PROPERTIES LINK_FLAGS "-fno-objc-arc")
+    set_source_files_properties(Framework/main_mac.mm PROPERTIES COMPILE_FLAGS "-fno-objc-arc")
 endif()
 
