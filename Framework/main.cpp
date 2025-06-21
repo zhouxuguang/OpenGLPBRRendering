@@ -4,24 +4,6 @@
 #pragma comment(lib,"winmm.lib")
 #pragma warning(disable : 4996)
 
-unsigned char * LoadFileContent(const char *path, int &filesize) {
-	unsigned char*fileContent = nullptr;
-	filesize = 0;
-	FILE*pFile = fopen(path, "rb");
-	if (pFile) {
-		fseek(pFile, 0, SEEK_END);
-		int nLen = ftell(pFile);
-		if (nLen > 0) {
-			rewind(pFile);
-			fileContent = new unsigned char[nLen + 1];
-			fread(fileContent, sizeof(unsigned char), nLen, pFile);
-			fileContent[nLen] = '\0';
-			filesize = nLen;
-		}
-		fclose(pFile);
-	}
-	return fileContent;
-}
 float GetFrameTime() {
 	static unsigned long lastTime = 0, timeSinceComputerStart = 0;
 	timeSinceComputerStart = timeGetTime();

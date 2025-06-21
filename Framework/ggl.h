@@ -1,6 +1,5 @@
 #pragma once
-#include <windows.h>
-#include "glew.h"
+#include "glad/glad.h"
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
