@@ -52,14 +52,20 @@ void main()
     float lightIntensity = 4.0;
     float attenuation = 1.0;
 
+    vec3 F0 = vec3(0.04);
+    vec3 albedo = vec3(0.7, 0.4, 0.1);
+    float metallic = 0.0;
+
     vec3 FinalColor = vec3(0.0);
     //direct light
     {
         vec3 Ks = Fresnel(vec3(0.04), HdotV);
         float D = NDF(NdotH, inRoughness);
         float G = Geometry(NdotV, inRoughness);
-        vec3 specular = (D * Ks * G) / (4.0 * NdotL * NdotV);
-        vec3 diffuse = vec3(0.0);
+        vec3 specular = (D * Ks * G) / (4.0 * NdotL * NdotV + 0.0001);
+
+        vec3 Kd = vec3(1.0) - Ks;
+        vec3 diffuse = Kd * albedo * PI;
         FinalColor = (diffuse + specular) * lightColor * lightIntensity * attenuation * NdotL;
     }
 
