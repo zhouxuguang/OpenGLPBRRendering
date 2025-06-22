@@ -47,14 +47,16 @@ void main()
     float NdotH = max(dot(N, H), 0.0);
     float NdotV = max(dot(N, V), 0.0);
 
-    float inRoughness = 1.0;
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
     float lightIntensity = 4.0;
     float attenuation = 1.0;
 
     vec3 F0 = vec3(0.04);
     vec3 albedo = vec3(0.7, 0.4, 0.1);
-    float metallic = 0.0;
+    float inRoughness = 0.0;  // 0.0 0.1 0.2 
+    float metallic = 0.9;  //0.0 0.1 0.2
+
+    F0 = mix(F0, albedo, metallic);
 
     vec3 FinalColor = vec3(0.0);
     //direct light
@@ -65,6 +67,7 @@ void main()
         vec3 specular = (D * Ks * G) / (4.0 * NdotL * NdotV + 0.0001);
 
         vec3 Kd = vec3(1.0) - Ks;
+        Kd *= (1.0 - metallic);
         vec3 diffuse = Kd * albedo * PI;
         FinalColor = (diffuse + specular) * lightColor * lightIntensity * attenuation * NdotL;
     }
