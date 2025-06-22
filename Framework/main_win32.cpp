@@ -56,6 +56,21 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 	wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
 	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+
+	// 获取当前exe完整路径
+	char path[MAX_PATH] = {0};
+	GetModuleFileNameA(nullptr, path, MAX_PATH);
+
+	// 移除文件名，只保留目录
+	std::string exePath = path;
+	size_t lastSlash = exePath.find_last_of("\\/");
+	if (lastSlash != std::string::npos) {
+		exePath = exePath.substr(0, lastSlash);
+	}
+
+	// 设置工作目录
+	SetCurrentDirectoryA(exePath.c_str());
+
 	WNDCLASSEX wndclass;
 	wndclass.cbClsExtra = 0;
 	wndclass.cbSize = sizeof(WNDCLASSEX);
