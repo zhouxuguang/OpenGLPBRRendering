@@ -28,6 +28,14 @@ float NDF(float NdotH, float inRoughness)
     return numerator / denominator;
 }
 
+
+float Geometry(float NdotV, float inRoughness)
+{
+    float K = (inRoughness + 1.0) * (inRoughness + 1.0) / 8.0;
+
+    return NdotV / (NdotV * (1.0 - K) + K);
+}
+
 void main()
 {
     vec3 N = normalize(V_Normal.xyz);
@@ -37,6 +45,7 @@ void main()
     float NdotL = max(dot(N, L), 0.0);
     float HdotV = max(dot(H, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
+    float NdotV = max(dot(N, V), 0.0);
 
     float inRoughness = 1.0;
 
@@ -45,7 +54,8 @@ void main()
     {
         vec3 Ks = Fresnel(vec3(0.04), HdotV);
         float D = NDF(NdotH, inRoughness);
-        vec3 specular = D * Ks;
+        float G = Geometry(NdotV, inRoughness);
+        vec3 specular = D * Ks * G;
         vec3 diffuse = vec3(0.0);
         FinalColor = (diffuse + specular) * NdotL;
     }
