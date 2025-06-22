@@ -1,8 +1,11 @@
 #include "ggl.h"
 #include "scene.h"
-#include "wglew.h"
+#include "wgl.h"
 
 #pragma warning(disable : 4996)
+
+PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = NULL;
+PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
 
 HGLRC CreateNBRC(HDC dc)
 {
@@ -51,6 +54,8 @@ LRESULT CALLBACK GLWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+	wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
+	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 	WNDCLASSEX wndclass;
 	wndclass.cbClsExtra = 0;
 	wndclass.cbSize = sizeof(WNDCLASSEX);
@@ -61,12 +66,12 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wndclass.hIconSm = NULL;
 	wndclass.hInstance = hInstance;
 	wndclass.lpfnWndProc = GLWindowProc;
-	wndclass.lpszClassName = L"GLWindow";
+	wndclass.lpszClassName = "GLWindow";
 	wndclass.lpszMenuName = NULL;
 	wndclass.style = CS_VREDRAW | CS_HREDRAW;
 	ATOM atom = RegisterClassEx(&wndclass);
 	if (!atom) {
-		MessageBox(NULL, L"Register Fail", L"Error", MB_OK);
+		MessageBoxA(NULL, "Register Fail", "Error", MB_OK);
 		return 0;
 	}
 	int prefered_canvas_width = 1280;
@@ -79,7 +84,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, NULL);
 	int windowWidth = rect.right - rect.left;
 	int windowHeight = rect.bottom - rect.top;
-	HWND hwnd = CreateWindowEx(NULL, L"GLWindow", L"OpenGL Window", WS_OVERLAPPEDWINDOW,
+	HWND hwnd = CreateWindowExA(NULL, "GLWindow", "OpenGL Window", WS_OVERLAPPEDWINDOW,
 		100, 100, windowWidth, windowHeight,
 		NULL, NULL, hInstance, NULL);
 	HDC dc = GetDC(hwnd);
@@ -96,7 +101,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetPixelFormat(dc, pixelFormat, &pfd);
 	HGLRC rc = wglCreateContext(dc);
 	wglMakeCurrent(dc, rc);
-	glewInit();
+	gladLoadGL();
 	if (wglChoosePixelFormatARB)
 	{
 		//destroy window
@@ -106,7 +111,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ReleaseDC(hwnd, dc);
 		dc = nullptr;
 		DestroyWindow(hwnd);
-		hwnd = CreateWindowEx(NULL, L"GLWindow", L"RenderWindow", WS_OVERLAPPEDWINDOW, 100, 100, windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
+		hwnd = CreateWindowExA(NULL, "GLWindow", "RenderWindow", WS_OVERLAPPEDWINDOW, 100, 100, windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 		//create msaa rc
 		dc = GetDC(hwnd);
 		rc = CreateNBRC(dc);

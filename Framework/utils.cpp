@@ -4,9 +4,11 @@ extern"C" {
 }
 
 #ifdef _WIN32
+
+#include <Windows.h>
+
 #pragma warning(disable : 4996)
 #pragma comment(lib,"opengl32.lib")
-#pragma comment(lib,"glew32.lib")
 #pragma comment(lib,"winmm.lib")
 #pragma warning(disable : 4996)
 

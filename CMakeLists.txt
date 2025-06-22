@@ -36,19 +36,21 @@ set(PROJECT_SOURCES
         Framework/stbi/stb_image.h
 )
 
-add_library(PBRFramework SHARED ${PROJECT_SOURCES})
+add_library(PBRFramework ${PROJECT_SOURCES})
 
 target_include_directories(PBRFramework PUBLIC Framework/glad/include)
 
 set(PLATFORM_SRC )
 if(APPLE)
 set(PLATFORM_SRC Framework/main_mac.mm)
+add_executable(OpenGLPBRRendering ${PLATFORM_SRC})
 endif()
 
 if(WIN32)
 set(PLATFORM_SRC Framework/main_win32.cpp)
+add_executable(OpenGLPBRRendering WIN32 ${PLATFORM_SRC})
 endif()
-add_executable(OpenGLPBRRendering ${PLATFORM_SRC})
+
 target_link_libraries(OpenGLPBRRendering PRIVATE PBRFramework)
 
 if(APPLE)
