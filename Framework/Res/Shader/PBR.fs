@@ -52,9 +52,9 @@ void main()
     float attenuation = 1.0;
 
     vec3 F0 = vec3(0.04);
-    vec3 albedo = vec3(0.7, 0.4, 0.1);
+    vec3 albedo = vec3(0.0, 1.0, 0.0);
     float inRoughness = 0.0;  // 0.0 0.1 0.2 
-    float metallic = 0.9;  //0.0 0.1 0.2
+    float metallic = 0.1;  //0.0 0.1 0.2
 
     F0 = mix(F0, albedo, metallic);
 
@@ -63,16 +63,15 @@ void main()
     {
         vec3 Ks = Fresnel(vec3(0.04), HdotV);
         float D = NDF(NdotH, inRoughness);
-        float G = Geometry(NdotV, inRoughness);
-        vec3 specular = (D * Ks * G) / (4.0 * NdotL * NdotV + 0.0001);
+        float Gv = Geometry(NdotV, inRoughness);
+        float Gl = Geometry(NdotV, inRoughness);
+        vec3 specular = (D * Ks * Gv * Gl) / (4.0 * NdotL * NdotV + 0.0001);
 
         vec3 Kd = vec3(1.0) - Ks;
         Kd *= (1.0 - metallic);
         vec3 diffuse = Kd * albedo * PI;
         FinalColor = (diffuse + specular) * lightColor * lightIntensity * attenuation * NdotL;
     }
-
-    //vec3 FinalColor = vec3(0.0);
 
     OutColor0 = vec4(FinalColor, 1.0);
 }
