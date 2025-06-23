@@ -64,7 +64,7 @@ void main()
         vec3 Ks = Fresnel(vec3(0.04), HdotV);
         float D = NDF(NdotH, inRoughness);
         float Gv = Geometry(NdotV, inRoughness);
-        float Gl = Geometry(NdotV, inRoughness);
+        float Gl = Geometry(NdotL, inRoughness);
         vec3 specular = (D * Ks * Gv * Gl) / (4.0 * NdotL * NdotV + 0.0001);
 
         vec3 Kd = vec3(1.0) - Ks;
