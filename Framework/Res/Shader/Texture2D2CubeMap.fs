@@ -4,7 +4,7 @@ out vec4 OutColor0;
 in vec3 V_Texcoord;
 uniform sampler2D U_Texture;
 
-const PI = 3.1415926;
+const float PI = 3.1415926;
 
 vec2 CubeMapTexcoord2Texture2DTexcoord(vec3 inTexcoord)
 {

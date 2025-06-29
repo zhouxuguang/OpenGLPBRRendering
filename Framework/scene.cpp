@@ -14,13 +14,16 @@ StaticMesh* gSkyBoxmesh = nullptr;
 GLuint gToneMappingShader = 0;
 GLuint gPBRShader = 0;
 GLuint gTexture2D2CubeMapShader = 0;
+GLuint gSkyBoxShader = 0;
 GLuint gHDRTexture = 0;
 Material* gToneMappingMaterial = nullptr;
 Material* gPBRMaterial = nullptr;
 Material* gTexture2D2CubeMapMaterial = nullptr;
+Material* gSkyBoxMaterial = nullptr;
 GameObject* gToneMappingGameObject = nullptr;
 GameObject* gSphereGameObject = nullptr;
 GameObject* gTexture2D2CubeMapObject = nullptr;
+GameObject* gSkyBoxObject = nullptr;
 FrameBufferObject* gHDRFbo = nullptr;
 glm::mat4 gProjectionMatrix;
 Camera gMainCamera;
@@ -67,6 +70,7 @@ void Init()
     gTexture2D2CubeMapObject = new GameObject;
     gTexture2D2CubeMapObject->mStaticMesh = gSkyBoxmesh;
     gTexture2D2CubeMapObject->mMaterial = gTexture2D2CubeMapMaterial->Clone();
+    gTexture2D2CubeMapObject->mMaterial->mbEnableCullFace = false;
     gTexture2D2CubeMapObject->mMaterial->SetTexture("U_Texture", gHDRTexture);
     
     //天空盒环境捕捉器
@@ -81,6 +85,16 @@ void Init()
     }
     gCaptureTexture2D2CubeMap->Unbind();
     
+    // 加载正常天空盒的信息
+    gSkyBoxShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/SkyBox.fs");
+    gSkyBoxMaterial = new Material(gSkyBoxShader);
+    gSkyBoxObject = new GameObject;
+    gSkyBoxObject->mStaticMesh = gSkyBoxmesh;
+    gSkyBoxObject->mMaterial = gSkyBoxMaterial->Clone();
+    gSkyBoxObject->mMaterial->mbEnableDepthTest = false;
+    gSkyBoxObject->mMaterial->mbEnableCullFace = false;
+    gSkyBoxObject->mMaterial->SetTextureCube("U_SkyBox", gCaptureTexture2D2CubeMap->mCubeMap);
+    
     gPBRShader = CreateProgramFromFile("Res/Shader/PBR.vs", "Res/Shader/PBR.fs");
     gPBRMaterial = new Material(gPBRShader);
 
@@ -92,6 +106,7 @@ void Init()
     gSphereGameObject->mStaticMesh = gSphereMesh;
     gSphereGameObject->mMaterial = gPBRMaterial->Clone();
     
+    gMainCamera.mPosition = glm::vec3(0.0f, 0.0f, 3.0f);
     gMainCamera.mViewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,1.0f,0.0f));
 }
 void SetViewPortSize(int inWidth, int inHeight) 
@@ -109,6 +124,12 @@ void Draw()
     
     glClearColor(0.1f, 0.4f, 0.6f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // render sky
+    glDepthMask(GL_FALSE);
+    gSkyBoxObject->mModelMatrix = glm::translate(gMainCamera.mPosition);
+    gSkyBoxObject->Render(gProjectionMatrix, &gMainCamera);
+    glDepthMask(GL_TRUE);
     
     gSphereGameObject->mMaterial->SetCameraWorldPosition(0, 0, 3);
     gSphereGameObject->Render(gProjectionMatrix, &gMainCamera);
