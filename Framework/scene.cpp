@@ -8,32 +8,47 @@
 #include "stbi/stb_image.h"
 #include "BoxCapture.h"
 
+// mesh
 FullScreenQuadMesh* gFullScreenQuadMesh = nullptr;
 StaticMesh* gSphereMesh = nullptr;
 StaticMesh* gSkyBoxmesh = nullptr;
+
+// shader
 GLuint gToneMappingShader = 0;
 GLuint gPBRShader = 0;
 GLuint gTexture2D2CubeMapShader = 0;
+GLuint gCaptureDiffuseIrradianceShader = 0;
 GLuint gSkyBoxShader = 0;
 GLuint gHDRTexture = 0;
+
+//material
 Material* gToneMappingMaterial = nullptr;
 Material* gPBRMaterial = nullptr;
 Material* gTexture2D2CubeMapMaterial = nullptr;
+Material* gCaptureDiffuseIrradianceMaterial = nullptr;
 Material* gSkyBoxMaterial = nullptr;
+
+// gameobject
 GameObject* gToneMappingGameObject = nullptr;
 GameObject* gSphereGameObject = nullptr;
 GameObject* gTexture2D2CubeMapObject = nullptr;
 GameObject* gSkyBoxObject = nullptr;
+GameObject* gCaptureDiffuseIrradianceGameObject = nullptr;
+
+
 FrameBufferObject* gHDRFbo = nullptr;
 glm::mat4 gProjectionMatrix;
 Camera gMainCamera;
+
+// box capture
 BoxCapture* gCaptureTexture2D2CubeMap = nullptr;
+BoxCapture* gCaptureDiffuseIrradiance = nullptr;
 
 glm::mat4 gCaptureProjectionMatrix;
 Camera gCaptureCameras[6];
 
 
-void Init() 
+void Init()
 {
 	//init runtime assets
     gCaptureProjectionMatrix= glm::perspective(90.0f, 1.0f, 0.1f, 100.0f);
@@ -61,6 +76,10 @@ void Init()
     // 加载天空盒的shader
     gTexture2D2CubeMapShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/Texture2D2CubeMap.fs");
     gTexture2D2CubeMapMaterial = new Material(gTexture2D2CubeMapShader);
+    
+    // diffuse irraidance
+    gCaptureDiffuseIrradianceShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/CaptureDiffuseIrradiance.fs");
+    gCaptureDiffuseIrradianceMaterial = new Material(gCaptureDiffuseIrradianceShader);
     
     // 加载天空盒图片，2d纹理格式
     stbi_set_flip_vertically_on_load(true);
@@ -106,10 +125,30 @@ void Init()
     gSphereGameObject->mStaticMesh = gSphereMesh;
     gSphereGameObject->mMaterial = gPBRMaterial->Clone();
     
+    //生成difuse irraidance的天空盒
+    gCaptureDiffuseIrradianceGameObject = new GameObject;
+    gCaptureDiffuseIrradianceGameObject->mStaticMesh = gSkyBoxmesh;
+    gCaptureDiffuseIrradianceGameObject->mMaterial = gCaptureDiffuseIrradianceMaterial->Clone();
+    gCaptureDiffuseIrradianceGameObject->mMaterial->mbEnableCullFace = false;
+    gCaptureDiffuseIrradianceGameObject->mMaterial->SetTextureCube("U_SkyBox", gCaptureTexture2D2CubeMap->mCubeMap);
+    
+    //天空盒环境捕捉器
+    gCaptureDiffuseIrradiance = new BoxCapture();
+    gCaptureDiffuseIrradiance->Init(512, GL_RGB32F, GL_FLOAT);
+    
+    gCaptureDiffuseIrradiance->Bind();
+    for (int i = 0; i < 6; i ++)
+    {
+        gCaptureDiffuseIrradiance->BeginRenderFace(i);
+        gCaptureDiffuseIrradianceGameObject->Render(gCaptureProjectionMatrix, gCaptureCameras + i);
+    }
+    gCaptureDiffuseIrradiance->Unbind();
+    
     gMainCamera.mPosition = glm::vec3(0.0f, 0.0f, 3.0f);
     gMainCamera.mViewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,1.0f,0.0f));
 }
-void SetViewPortSize(int inWidth, int inHeight) 
+
+void SetViewPortSize(int inWidth, int inHeight)
 {
     gProjectionMatrix = glm::perspective(60.0f, float(inWidth) / float(inHeight), 0.1f, 1000.0f);
 	//rt
@@ -118,7 +157,8 @@ void SetViewPortSize(int inWidth, int inHeight)
     gHDRFbo->AttachDepthBuffer("depth", inWidth, inHeight);
     gHDRFbo->Finish();
 }
-void Draw() 
+
+void Draw()
 {
     gHDRFbo->Bind();
     
