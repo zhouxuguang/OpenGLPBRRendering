@@ -4,6 +4,8 @@ in vec4 V_Texcoord;
 in vec4 V_Normal;
 in vec3 V_WorldPos;
 
+uniform samplerCube U_PrefilteredColor;
+
 uniform DefaultVec4s
 {
     vec4 CameraWorldPosition;
@@ -42,6 +44,7 @@ void main()
     vec3 L = normalize(vec3(1.0, 1.0, 1.0));
     vec3 V = normalize(CameraWorldPosition.xyz - V_WorldPos); //surface -> eye
     vec3 H = normalize(L+V);
+    vec3 R = normalize(2.0 * dot(V, N) * N - V);
     float NdotL = max(dot(N, L), 0.0);
     float HdotV = max(dot(H, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
@@ -71,6 +74,12 @@ void main()
         Kd *= (1.0 - metallic);
         vec3 diffuse = Kd * albedo * PI;
         FinalColor = (diffuse + specular) * lightColor * lightIntensity * attenuation * NdotL;
+    }
+
+    {
+        vec3 prefilteredColor = textureLod(U_PrefilteredColor, R, inRoughness * 4.0).rgb;
+        vec3 ambinetColor = prefilteredColor;
+        FinalColor = ambinetColor;
     }
 
     OutColor0 = vec4(FinalColor, 1.0);

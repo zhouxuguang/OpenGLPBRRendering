@@ -18,6 +18,7 @@ GLuint gToneMappingShader = 0;
 GLuint gPBRShader = 0;
 GLuint gTexture2D2CubeMapShader = 0;
 GLuint gCaptureDiffuseIrradianceShader = 0;
+GLuint gCapturePrefilteredColorShader = 0;
 GLuint gSkyBoxShader = 0;
 GLuint gHDRTexture = 0;
 
@@ -26,6 +27,7 @@ Material* gToneMappingMaterial = nullptr;
 Material* gPBRMaterial = nullptr;
 Material* gTexture2D2CubeMapMaterial = nullptr;
 Material* gCaptureDiffuseIrradianceMaterial = nullptr;
+Material* gCapturePrefilteredColorMaterial = nullptr;
 Material* gSkyBoxMaterial = nullptr;
 
 // gameobject
@@ -34,6 +36,7 @@ GameObject* gSphereGameObject = nullptr;
 GameObject* gTexture2D2CubeMapObject = nullptr;
 GameObject* gSkyBoxObject = nullptr;
 GameObject* gCaptureDiffuseIrradianceGameObject = nullptr;
+GameObject* gCapturePrefilteredColorGameObject = nullptr;
 
 
 FrameBufferObject* gHDRFbo = nullptr;
@@ -43,6 +46,7 @@ Camera gMainCamera;
 // box capture
 BoxCapture* gCaptureTexture2D2CubeMap = nullptr;
 BoxCapture* gCaptureDiffuseIrradiance = nullptr;
+BoxCapture* gCapturePrefilteredColor = nullptr;
 
 glm::mat4 gCaptureProjectionMatrix;
 Camera gCaptureCameras[6];
@@ -80,6 +84,10 @@ void Init()
     // diffuse irraidance
     gCaptureDiffuseIrradianceShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/CaptureDiffuseIrradiance.fs");
     gCaptureDiffuseIrradianceMaterial = new Material(gCaptureDiffuseIrradianceShader);
+    
+    // PrefilteredColor
+    gCapturePrefilteredColorShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/CapturePrefilteredColor.fs");
+    gCapturePrefilteredColorMaterial = new Material(gCapturePrefilteredColorShader);
     
     // 加载天空盒图片，2d纹理格式
     stbi_set_flip_vertically_on_load(true);
@@ -143,6 +151,30 @@ void Init()
         gCaptureDiffuseIrradianceGameObject->Render(gCaptureProjectionMatrix, gCaptureCameras + i);
     }
     gCaptureDiffuseIrradiance->Unbind();
+    
+    // PrefilteredColor
+    gCapturePrefilteredColorGameObject = new GameObject;
+    gCapturePrefilteredColorGameObject->mStaticMesh = gSkyBoxmesh;
+    gCapturePrefilteredColorGameObject->mMaterial = gCapturePrefilteredColorMaterial->Clone();
+    gCapturePrefilteredColorGameObject->mMaterial->mbEnableCullFace = false;
+    gCapturePrefilteredColorGameObject->mMaterial->SetTextureCube("U_SkyBox", gCaptureTexture2D2CubeMap->mCubeMap);
+    
+    //天空盒环境捕捉器
+    gCapturePrefilteredColor = new BoxCapture();
+    gCapturePrefilteredColor->Init(512, GL_RGB32F, GL_FLOAT, true);
+    
+    gCapturePrefilteredColor->Bind();
+    for (int mipmapLevel = 0; mipmapLevel < 5; mipmapLevel++) 
+    {
+        float roughness = float(mipmapLevel) / float(4);
+        for (int i = 0; i < 6; ++i) 
+        {
+            gCapturePrefilteredColor->BeginRenderFace(i, mipmapLevel);
+            gCapturePrefilteredColorGameObject->mMaterial->SetVec4(0, roughness, 0.0f, 0.0f, 0.0f);
+            gCapturePrefilteredColorGameObject->Render(gCaptureProjectionMatrix, &gCaptureCameras[i]);
+        }
+    }
+    gCapturePrefilteredColor->Unbind();
     
     gMainCamera.mPosition = glm::vec3(0.0f, 0.0f, 3.0f);
     gMainCamera.mViewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,1.0f,0.0f));

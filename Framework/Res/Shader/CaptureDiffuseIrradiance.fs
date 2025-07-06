@@ -12,8 +12,8 @@ void main()
     Y = normalize(cross(N, X));
     vec3 precomputedLight = vec3(0.0);
     float sampleCount = 0.0;
-    float step1 = 2.0 * PI / 1000.0;
-    float step2 = 0.5 * PI / 250.0;
+    float step1 = 2.0 * PI / 64.0;
+    float step2 = 0.5 * PI / 16.0;
 
     //begin
     for (float phi = 0.0; phi < 2.0 * PI; phi += step1)
