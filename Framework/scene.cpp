@@ -58,6 +58,7 @@ Camera gCaptureCameras[6];
 
 void Init()
 {
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	//init runtime assets
     gCaptureProjectionMatrix= glm::perspective(90.0f, 1.0f, 0.1f, 100.0f);
     gCaptureCameras[0].mViewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -189,7 +190,7 @@ void Init()
     gGenerateBRDFGameObject->mMaterial = gGenerateBRDFMaterial->Clone();
     
     gGenerateBRDFFbo = new FrameBufferObject;
-    gGenerateBRDFFbo->AttachColorBuffer("color", GL_COLOR_ATTACHMENT0, 512, 512, GL_RG32F, GL_RG, GL_FLOAT);
+    gGenerateBRDFFbo->AttachColorBuffer("color", GL_COLOR_ATTACHMENT0, 512, 512, GL_RG16F, GL_RG, GL_FLOAT);
     gGenerateBRDFFbo->Finish();
     
     gMainCamera.mPosition = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -221,6 +222,10 @@ void Draw()
     
     gSphereGameObject->mMaterial->SetCameraWorldPosition(0, 0, 3);
     gSphereGameObject->Render(gProjectionMatrix, &gMainCamera);
+
+    gSphereGameObject->mMaterial->SetTextureCube("U_PrefilteredColor", gCapturePrefilteredColor->mCubeMap);
+    gSphereGameObject->mMaterial->SetTextureCube("U_DiffuseIrradiance", gCaptureDiffuseIrradiance->mCubeMap);
+    gSphereGameObject->mMaterial->SetTexture("U_BRDFLUT", gGenerateBRDFFbo->GetBuffer("color"));
     
     gHDRFbo->Unbind();
 	//hdr rendering pipeline
