@@ -21,6 +21,7 @@ GLuint gCaptureDiffuseIrradianceShader = 0;
 GLuint gCapturePrefilteredColorShader = 0;
 GLuint gSkyBoxShader = 0;
 GLuint gHDRTexture = 0;
+GLuint gGenerateBRDFShader = 0;
 
 //material
 Material* gToneMappingMaterial = nullptr;
@@ -29,6 +30,7 @@ Material* gTexture2D2CubeMapMaterial = nullptr;
 Material* gCaptureDiffuseIrradianceMaterial = nullptr;
 Material* gCapturePrefilteredColorMaterial = nullptr;
 Material* gSkyBoxMaterial = nullptr;
+Material* gGenerateBRDFMaterial = nullptr;
 
 // gameobject
 GameObject* gToneMappingGameObject = nullptr;
@@ -37,9 +39,11 @@ GameObject* gTexture2D2CubeMapObject = nullptr;
 GameObject* gSkyBoxObject = nullptr;
 GameObject* gCaptureDiffuseIrradianceGameObject = nullptr;
 GameObject* gCapturePrefilteredColorGameObject = nullptr;
+GameObject* gGenerateBRDFGameObject = nullptr;
 
 
 FrameBufferObject* gHDRFbo = nullptr;
+FrameBufferObject* gGenerateBRDFFbo = nullptr;
 glm::mat4 gProjectionMatrix;
 Camera gMainCamera;
 
@@ -88,6 +92,9 @@ void Init()
     // PrefilteredColor
     gCapturePrefilteredColorShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/CapturePrefilteredColor.fs");
     gCapturePrefilteredColorMaterial = new Material(gCapturePrefilteredColorShader);
+    
+    gGenerateBRDFShader = CreateProgramFromFile("Res/Shader/FSQ.vs", "Res/Shader/GenerateBRDF.fs");
+    gGenerateBRDFMaterial = new Material(gGenerateBRDFShader);
     
     // 加载天空盒图片，2d纹理格式
     stbi_set_flip_vertically_on_load(true);
@@ -175,6 +182,15 @@ void Init()
         }
     }
     gCapturePrefilteredColor->Unbind();
+    
+    //brdf相关
+    gGenerateBRDFGameObject = new GameObject;
+    gGenerateBRDFGameObject->mStaticMesh = gFullScreenQuadMesh;
+    gGenerateBRDFGameObject->mMaterial = gGenerateBRDFMaterial->Clone();
+    
+    gGenerateBRDFFbo = new FrameBufferObject;
+    gGenerateBRDFFbo->AttachColorBuffer("color", GL_COLOR_ATTACHMENT0, 512, 512, GL_RG32F, GL_RG, GL_FLOAT);
+    gGenerateBRDFFbo->Finish();
     
     gMainCamera.mPosition = glm::vec3(0.0f, 0.0f, 3.0f);
     gMainCamera.mViewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,1.0f,0.0f));
