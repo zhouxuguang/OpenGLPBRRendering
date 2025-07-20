@@ -8,12 +8,12 @@ const float PI = 3.1415926;
 
 vec2 CubeMapTexcoord2Texture2DTexcoord(vec3 inTexcoord)
 {
-    //float fracZX = inTexcoord.z/inTexcoord.x;
     vec2 texcoord = vec2(atan(inTexcoord.z, inTexcoord.x), asin(inTexcoord.y));
     texcoord *= vec2(0.1591549, 0.3183099);
     texcoord += vec2(0.5);
     return texcoord;
 }
+
 void main()
 {
     vec2 uv = CubeMapTexcoord2Texture2DTexcoord(normalize(V_Texcoord));

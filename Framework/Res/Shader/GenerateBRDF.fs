@@ -26,21 +26,21 @@ vec2 HammersleyPoint(uint index, uint inTotalSampleCount)
 
 vec3 ImportanceSampleGGX(vec2 inXi, vec3 inN, float inRoughness)
 {
-    float r4=pow(inRoughness,4);
-    float phi=2.0*PI*inXi.x;//0->1
-    float cosTheta=sqrt((1.0-inXi.y)/(1.0+(r4-1.0)*inXi.y));//D
-    float sinTheta=sqrt(1.0-cosTheta*cosTheta);
+    float r4 = pow(inRoughness, 4);
+    float phi = 2.0 * PI * inXi.x;//0->1
+    float cosTheta = sqrt((1.0 - inXi.y) / (1.0 + (r4 - 1.0) * inXi.y));//D
+    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
 
     vec3 H;
-    H.x=sinTheta*cos(phi);
-    H.y=sinTheta*sin(phi);
-    H.z=cosTheta;
+    H.x = sinTheta * cos(phi);
+    H.y = sinTheta * sin(phi);
+    H.z = cosTheta;
 
-    vec3 temp=abs(inN.z)<0.999?vec3(0.0,0.0,1.0):vec3(1.0,0.0,0.0);
-    vec3 X=normalize(cross(temp,inN));
-    vec3 Y=cross(inN,X);
+    vec3 temp = abs(inN.z) < 0.999 ? vec3(0.0,0.0,1.0) : vec3(1.0,0.0,0.0);
+    vec3 X = normalize(cross(temp, inN));
+    vec3 Y = cross(inN, X);
 
-    vec3 HFinal=X*H.x+Y*H.y+inN*H.z;
+    vec3 HFinal = X* H.x + Y * H.y + inN * H.z;
     return HFinal;
 }
 

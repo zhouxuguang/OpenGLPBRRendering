@@ -20,8 +20,8 @@ void main()
     {
         for (float theta = 0.0; theta < 0.5 * PI; theta += step2)
         {
-            vec3 localL = vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));  //局部坐标系的坐标
-            vec3 L = localL.x*X + localL.y*Y + localL.z*N;  //世界坐标
+            vec3 localL = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));  //局部坐标系的坐标
+            vec3 L = localL.x * X + localL.y * Y + localL.z * N;  //世界坐标
 
             precomputedLight += texture(U_SkyBox, L).rgb * cos(theta) * sin(theta);
             sampleCount++;
