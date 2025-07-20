@@ -136,7 +136,7 @@ int main(int argc, const char * argv[]) {
                                                     backing:NSBackingStoreBuffered
                                                       defer:NO];
     
-    [window setTitle:@"OpenGL macOS Window"];
+    [window setTitle:@"OpenGLPBRRendering"];
     
     // 创建OpenGL视图
     NSOpenGLPixelFormat* pixelFormat = [MacGLView createPixelFormat];

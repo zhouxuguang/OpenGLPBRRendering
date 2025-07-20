@@ -57,7 +57,7 @@ if(APPLE)
     target_link_libraries(OpenGLPBRRendering PRIVATE "-framework CoreGraphics" "-framework CoreVideo" "-framework QuartzCore" 
         "-framework GameController" "-framework Metal" "-framework ImageIO" "-framework OpenGL" "-framework AppKit")
     target_compile_options(OpenGLPBRRendering PRIVATE "-fobjc-arc")
-    add_definitions(-DGL_SILENCE_DEPRECATION)
+    target_compile_definitions(OpenGLPBRRendering PRIVATE -DGL_SILENCE_DEPRECATION)
     set_source_files_properties(Framework/main_mac.mm PROPERTIES COMPILE_FLAGS "-fno-objc-arc")
 endif()
 
