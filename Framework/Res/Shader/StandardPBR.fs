@@ -90,7 +90,11 @@ void main()
 
     vec3 F0 = vec3(0.04);
     vec3 albedo = GammaDecode(texture(U_Albedo, V_Texcoord.xy).rgb);
-    float inRoughness = texture(U_Roughness, V_Texcoord.xy).r;  // 0.0 0.1 0.2 
+    float roughness = texture(U_Roughness, V_Texcoord.xy).r;  // 0.0 0.1 0.2 
+    if (roughness < 0.001)
+    {
+        roughness = 0.001;
+    }
     float metallic = texture(U_Metallic, V_Texcoord.xy).r;  //0.0 0.1 0.2
 
     F0 = mix(F0, albedo, metallic);
@@ -99,9 +103,9 @@ void main()
     //direct light
     {
         vec3 Ks = Fresnel(vec3(0.04), HdotV);
-        float D = NDF(NdotH, inRoughness);
-        float Gv = Geometry(NdotV, inRoughness);
-        float Gl = Geometry(NdotL, inRoughness);
+        float D = NDF(NdotH, roughness);
+        float Gv = Geometry(NdotV, roughness);
+        float Gl = Geometry(NdotL, roughness);
         vec3 specular = (D * Ks * Gv * Gl) / (4.0 * NdotL * NdotV + 0.0001);
 
         vec3 Kd = vec3(1.0) - Ks;
@@ -113,19 +117,22 @@ void main()
     {
         // IBL 部分
 
-        vec3 Ks = fresnelSchlickRoughness(F0, NdotV, inRoughness);
+        vec3 Ks = fresnelSchlickRoughness(F0, NdotV, roughness);
         vec3 Kd = vec3(1.0) - Ks;
         Kd *= (1.0 - metallic);
         vec3 diffuseIrradiance = texture(U_DiffuseIrradiance, N).rgb;
         vec3 ambientDiffuse = Kd * diffuseIrradiance * albedo;
 
-        vec2 brdf = texture(U_BRDFLUT, vec2(NdotV, inRoughness)).rg;
-        vec3 prefilteredColor = textureLod(U_PrefilteredColor, R, inRoughness * 4.0).rgb;
+        vec2 brdf = texture(U_BRDFLUT, vec2(NdotV, roughness)).rg;
+        vec3 prefilteredColor = textureLod(U_PrefilteredColor, R, roughness * 4.0).rgb;
         vec3 ambientSpecular = prefilteredColor * (F0 * brdf.x + brdf.y);
 
-        vec3 ambinetColor = ambientDiffuse + ambientSpecular;
-        FinalColor += ambinetColor;
+        float ao = texture(U_AO, V_Texcoord.xy).r;
+        vec3 ambinetColor = (ambientDiffuse + ambientSpecular) * ao;
+        FinalColor = prefilteredColor;
     }
+
+    vec3 emissive = texture(U_Emissive, V_Texcoord.xy).rgb;
 
     OutColor0 = vec4(FinalColor, 1.0);
 }
