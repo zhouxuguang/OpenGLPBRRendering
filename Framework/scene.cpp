@@ -11,7 +11,8 @@
 // mesh
 FullScreenQuadMesh* gFullScreenQuadMesh = nullptr;
 StaticMesh* gSphereMesh = nullptr;
-StaticMesh* gSkyBoxmesh = nullptr;
+StaticMesh* gSkyBoxMesh = nullptr;
+StaticMesh* gDamagedHelmetMesh = nullptr;
 
 // shader
 GLuint gToneMappingShader = 0;
@@ -22,6 +23,7 @@ GLuint gCapturePrefilteredColorShader = 0;
 GLuint gSkyBoxShader = 0;
 GLuint gHDRTexture = 0;
 GLuint gGenerateBRDFShader = 0;
+GLuint gStandardPBRShader = 0;
 
 //material
 Material* gToneMappingMaterial = nullptr;
@@ -31,6 +33,7 @@ Material* gCaptureDiffuseIrradianceMaterial = nullptr;
 Material* gCapturePrefilteredColorMaterial = nullptr;
 Material* gSkyBoxMaterial = nullptr;
 Material* gGenerateBRDFMaterial = nullptr;
+Material* gStandardPBRMaterial = nullptr;
 
 // gameobject
 GameObject* gToneMappingGameObject = nullptr;
@@ -40,7 +43,7 @@ GameObject* gSkyBoxObject = nullptr;
 GameObject* gCaptureDiffuseIrradianceGameObject = nullptr;
 GameObject* gCapturePrefilteredColorGameObject = nullptr;
 GameObject* gGenerateBRDFGameObject = nullptr;
-
+GameObject* gDamagedHelmetGameObject = nullptr;
 
 FrameBufferObject* gHDRFbo = nullptr;
 FrameBufferObject* gGenerateBRDFFbo = nullptr;
@@ -79,12 +82,19 @@ void Init()
     gSphereMesh->LoadFileFile("res/Model/sphere.staticmesh");
     
     // 加载天空盒的mesh
-    gSkyBoxmesh = new StaticMesh();
-    gSkyBoxmesh->LoadFileFile("res/Model/skybox.staticmesh");
+    gSkyBoxMesh = new StaticMesh();
+    gSkyBoxMesh->LoadFileFile("res/Model/skybox.staticmesh");
     
     // 加载天空盒的shader
     gTexture2D2CubeMapShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/Texture2D2CubeMap.fs");
     gTexture2D2CubeMapMaterial = new Material(gTexture2D2CubeMapShader);
+    
+    // 加载头盔的模型和shader
+    gDamagedHelmetMesh = new StaticMesh();
+    gDamagedHelmetMesh->LoadFileFile2("res/Model/DamagedHelmet.staticmesh");
+    
+    gStandardPBRShader = CreateProgramFromFile("Res/Shader/StandardPBR.vs", "Res/Shader/StandardPBR.fs");
+    gStandardPBRMaterial = new Material(gStandardPBRShader);
     
     // diffuse irraidance
     gCaptureDiffuseIrradianceShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/CaptureDiffuseIrradiance.fs");
@@ -103,7 +113,7 @@ void Init()
     
     // 天空盒的物体
     gTexture2D2CubeMapObject = new GameObject;
-    gTexture2D2CubeMapObject->mStaticMesh = gSkyBoxmesh;
+    gTexture2D2CubeMapObject->mStaticMesh = gSkyBoxMesh;
     gTexture2D2CubeMapObject->mMaterial = gTexture2D2CubeMapMaterial->Clone();
     gTexture2D2CubeMapObject->mMaterial->mbEnableCullFace = false;
     gTexture2D2CubeMapObject->mMaterial->SetTexture("U_Texture", gHDRTexture);
@@ -124,7 +134,7 @@ void Init()
     gSkyBoxShader = CreateProgramFromFile("Res/Shader/SkyBox.vs", "Res/Shader/SkyBox.fs");
     gSkyBoxMaterial = new Material(gSkyBoxShader);
     gSkyBoxObject = new GameObject;
-    gSkyBoxObject->mStaticMesh = gSkyBoxmesh;
+    gSkyBoxObject->mStaticMesh = gSkyBoxMesh;
     gSkyBoxObject->mMaterial = gSkyBoxMaterial->Clone();
     gSkyBoxObject->mMaterial->mbEnableDepthTest = false;
     gSkyBoxObject->mMaterial->mbEnableCullFace = false;
@@ -143,7 +153,7 @@ void Init()
     
     //生成difuse irraidance的天空盒
     gCaptureDiffuseIrradianceGameObject = new GameObject;
-    gCaptureDiffuseIrradianceGameObject->mStaticMesh = gSkyBoxmesh;
+    gCaptureDiffuseIrradianceGameObject->mStaticMesh = gSkyBoxMesh;
     gCaptureDiffuseIrradianceGameObject->mMaterial = gCaptureDiffuseIrradianceMaterial->Clone();
     gCaptureDiffuseIrradianceGameObject->mMaterial->mbEnableCullFace = false;
     gCaptureDiffuseIrradianceGameObject->mMaterial->SetTextureCube("U_SkyBox", gCaptureTexture2D2CubeMap->mCubeMap);
@@ -162,7 +172,7 @@ void Init()
     
     // PrefilteredColor
     gCapturePrefilteredColorGameObject = new GameObject;
-    gCapturePrefilteredColorGameObject->mStaticMesh = gSkyBoxmesh;
+    gCapturePrefilteredColorGameObject->mStaticMesh = gSkyBoxMesh;
     gCapturePrefilteredColorGameObject->mMaterial = gCapturePrefilteredColorMaterial->Clone();
     gCapturePrefilteredColorGameObject->mMaterial->mbEnableCullFace = false;
     gCapturePrefilteredColorGameObject->mMaterial->SetTextureCube("U_SkyBox", gCaptureTexture2D2CubeMap->mCubeMap);
@@ -193,8 +203,22 @@ void Init()
     gGenerateBRDFFbo->AttachColorBuffer("color", GL_COLOR_ATTACHMENT0, 512, 512, GL_RG16F, GL_RG, GL_FLOAT);
     gGenerateBRDFFbo->Finish();
     
-    gMainCamera.mPosition = glm::vec3(0.0f, 0.0f, 3.0f);
-    gMainCamera.mViewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,1.0f,0.0f));
+    gDamagedHelmetGameObject = new GameObject();
+    gDamagedHelmetGameObject->mStaticMesh = gDamagedHelmetMesh;
+    gDamagedHelmetGameObject->mMaterial = gStandardPBRMaterial->Clone();
+    
+    gDamagedHelmetGameObject->mMaterial->SetTextureCube("U_PrefilteredColor", gCapturePrefilteredColor->mCubeMap);
+    gDamagedHelmetGameObject->mMaterial->SetTextureCube("U_DiffuseIrradiance", gCaptureDiffuseIrradiance->mCubeMap);
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_BRDFLUT", gGenerateBRDFFbo->GetBuffer("color"));
+    
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_Albedo", CreateTextureFromFile("res/Image/DamagedHelmet/Albedo.jpg", GL_REPEAT));
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_AO", CreateTextureFromFile("res/Image/DamagedHelmet/Albedo.jpg", GL_REPEAT));
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_Emissive", CreateTextureFromFile("res/Image/DamagedHelmet/Emissive.jpg", GL_REPEAT));
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_Metallic", CreateTextureFromFile("res/Image/DamagedHelmet/Metallic.png", GL_REPEAT));
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_Normal", CreateTextureFromFile("res/Image/DamagedHelmet/Normal.jpg", GL_REPEAT));
+    gDamagedHelmetGameObject->mMaterial->SetTexture("U_Roughness", CreateTextureFromFile("res/Image/DamagedHelmet/Roughness.png", GL_REPEAT));
+    
+    gMainCamera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 3.0f, glm::vec3(0.0f, -0.2f, 1.0f));
 }
 
 void SetViewPortSize(int inWidth, int inHeight)
@@ -209,6 +233,8 @@ void SetViewPortSize(int inWidth, int inHeight)
 
 void Draw()
 {
+    float frameTime = GetFrameTime();
+    gMainCamera.RoundRotate(frameTime, glm::vec3(0.0f, 0.0f, 0.0f), 3.0f, 30.f);
     gHDRFbo->Bind();
     
     glClearColor(0.1f, 0.4f, 0.6f, 1.0f);
@@ -220,12 +246,8 @@ void Draw()
     gSkyBoxObject->Render(gProjectionMatrix, &gMainCamera);
     glDepthMask(GL_TRUE);
     
-    gSphereGameObject->mMaterial->SetCameraWorldPosition(0, 0, 3);
-    gSphereGameObject->Render(gProjectionMatrix, &gMainCamera);
-
-    gSphereGameObject->mMaterial->SetTextureCube("U_PrefilteredColor", gCapturePrefilteredColor->mCubeMap);
-    gSphereGameObject->mMaterial->SetTextureCube("U_DiffuseIrradiance", gCaptureDiffuseIrradiance->mCubeMap);
-    gSphereGameObject->mMaterial->SetTexture("U_BRDFLUT", gGenerateBRDFFbo->GetBuffer("color"));
+    gDamagedHelmetGameObject->mMaterial->SetCameraWorldPosition(gMainCamera.mPosition.x, gMainCamera.mPosition.y, gMainCamera.mPosition.z);
+    gDamagedHelmetGameObject->Render(gProjectionMatrix, &gMainCamera);
     
     gHDRFbo->Unbind();
 	//hdr rendering pipeline
