@@ -62,9 +62,18 @@ if(APPLE)
 endif()
 
 # 复制资源
-add_custom_command(TARGET OpenGLPBRRendering POST_BUILD
+# add_custom_command(TARGET OpenGLPBRRendering POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy_directory
+#         "${CMAKE_CURRENT_SOURCE_DIR}/Framework/Res"
+#         "$<TARGET_FILE_DIR:OpenGLPBRRendering>/Res"
+# )
+
+add_custom_command(TARGET OpenGLPBRRendering PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/Framework/Res"
         "$<TARGET_FILE_DIR:OpenGLPBRRendering>/Res"
+    # 声明无输出文件，强制每次运行
+    COMMENT "强制复制资源目录..."
+    BYPRODUCTS "dummy.txt"  # 虚拟输出，绕过检查
 )
 
