@@ -182,7 +182,7 @@ void Init()
     gCapturePrefilteredColor->Init(512, GL_RGB32F, GL_FLOAT, true);
     
     gCapturePrefilteredColor->Bind();
-    for (int mipmapLevel = 0; mipmapLevel < 5; mipmapLevel++) 
+    for (int mipmapLevel = 0; mipmapLevel < 5; mipmapLevel++)
     {
         float roughness = float(mipmapLevel) / float(4);
         for (int i = 0; i < 6; ++i) 
@@ -202,6 +202,10 @@ void Init()
     gGenerateBRDFFbo = new FrameBufferObject;
     gGenerateBRDFFbo->AttachColorBuffer("color", GL_COLOR_ATTACHMENT0, 512, 512, GL_RG16F, GL_RG, GL_FLOAT);
     gGenerateBRDFFbo->Finish();
+    
+    gGenerateBRDFFbo->Bind();
+    gGenerateBRDFGameObject->Render(gProjectionMatrix, nullptr);
+    gGenerateBRDFFbo->Unbind();
     
     gDamagedHelmetGameObject = new GameObject();
     gDamagedHelmetGameObject->mStaticMesh = gDamagedHelmetMesh;

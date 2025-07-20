@@ -129,10 +129,10 @@ void main()
 
         float ao = texture(U_AO, V_Texcoord.xy).r;
         vec3 ambinetColor = (ambientDiffuse + ambientSpecular) * ao;
-        FinalColor = prefilteredColor;
+        FinalColor += ambinetColor;
     }
 
     vec3 emissive = texture(U_Emissive, V_Texcoord.xy).rgb;
 
-    OutColor0 = vec4(FinalColor, 1.0);
+    OutColor0 = vec4(FinalColor + emissive, 1.0);
 }
